@@ -28,12 +28,24 @@ public class GenerateAst {
         String path = outputDir + "/" + baseName + ".java";
         PrintWriter writer = new PrintWriter(path, StandardCharsets.UTF_8);
 
+        // Package and imports
         writer.println("package com.craftinginterpreters.lox;");
         writer.println();
         writer.println("import java.util.List;");
+
+        // Base class signature.
         writer.println();
         writer.println("abstract class " + baseName + " {");
 
+        // Visitor interface declaration.
+        writer.println();
+        defineVisitor(writer, baseName, types);
+
+        // Base class abstract accept() method declaration.
+        writer.println();
+        writer.println("    abstract <R> R accept(Visitor<R> visitor);");
+
+        // The AST classes.
         for (String type : types){
             writer.println();
             String className = type.split(":")[0].strip();
@@ -44,6 +56,16 @@ public class GenerateAst {
         writer.println("}");
         writer.println();
         writer.close();
+    }
+
+    private static void defineVisitor(PrintWriter writer, String baseName, List<String> types) {
+        writer.println("    interface Visitor<R> {");
+
+        for (String type: types){
+            String typeName = type.split(":")[0].trim();
+            writer.println("        R visit" + typeName + baseName + "(" + typeName + " " + baseName.toLowerCase() + ");");
+        }
+        writer.println("    }");
     }
 
     private static void defineType(PrintWriter writer, String baseName, String className, String fieldList) {
@@ -65,8 +87,15 @@ public class GenerateAst {
             String fieldName = field.split(" ")[1];
             writer.println("            this." + fieldName + " = " + fieldName + "; ");
         }
-
         writer.println("        }");
+
+        // Abstract accept() method implementation (Visitor pattern).
+        writer.println();
+        writer.println("        @Override");
+        writer.println("        <R> R accept(Visitor<R> visitor) {");
+        writer.println("            return visitor.visit" + className + baseName +"(this);");
+        writer.println("        }");
+
         writer.println("    }");
     }
 }
