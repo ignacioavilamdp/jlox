@@ -9,7 +9,9 @@ import java.nio.file.Paths;
 import java.util.List;
 
 public class Lox {
+    private static final Interpreter interpreter = new Interpreter();
     static boolean hadError = false;
+    static boolean hadRuntimeError = false;
 
     public static void main(String[] args) throws IOException{
         if (args.length > 1) {
@@ -28,6 +30,7 @@ public class Lox {
         byte[] bytes = Files.readAllBytes(Paths.get(path));
         run(new String(bytes, Charset.defaultCharset()));
         if (hadError) System.exit(65);
+        if (hadRuntimeError) System.exit(70);
     }
 
     private static void runPrompt() throws  IOException{
@@ -54,7 +57,8 @@ public class Lox {
         Expr expression = parser.parse();
         if (hadError) return;
 
-        System.out.println(new AstPrinter().print(expression));
+        // Interpreter: From Abstract Syntax Tree -> Expression value
+        interpreter.interpret(expression);
     }
 
     static void error(int line, String message){
@@ -63,11 +67,16 @@ public class Lox {
 
     static void error(Token token, String message){
         if (token.type == TokenType.EOF){
-            report(token.line, " at end", message);
+            report(token.line, "at end", message);
         }
         else {
-            report(token.line, " at '" + token.lexeme + "'", message);
+            report(token.line, "at '" + token.lexeme + "'", message);
         }
+    }
+
+    static void runTimeError(RuntimeError error){
+        System.err.println(error.getMessage() + "\n[line" + error.token.line + "]");
+        hadRuntimeError = true;
     }
 
     static void report(int line, String where, String message){
