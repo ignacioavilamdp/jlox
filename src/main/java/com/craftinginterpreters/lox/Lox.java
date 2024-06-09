@@ -9,7 +9,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 public class Lox {
-    static boolean handError = false;
+    static boolean hadError = false;
 
     public static void main(String[] args) throws IOException{
         if (args.length > 1) {
@@ -27,7 +27,7 @@ public class Lox {
     private static void runFile(String path) throws IOException{
         byte[] bytes = Files.readAllBytes(Paths.get(path));
         run(new String(bytes, Charset.defaultCharset()));
-        if (handError) System.exit(65);
+        if (hadError) System.exit(65);
     }
 
     private static void runPrompt() throws  IOException{
@@ -39,25 +39,39 @@ public class Lox {
             String line = reader.readLine();
             if (line == null) break;
             run(line);
-            handError = false;
+            hadError = false;
         }
     }
 
     private static void run(String source){
+
+        // Scanner: From source code -> list of Tokens
         Scanner scanner = new Scanner(source);
         List<Token> tokens = scanner.scanTokens();
 
-        for (Token token : tokens){
-            System.out.println(token);
-        }
+        // Parser: From list of Tokens -> Abstract Syntax Tree
+        Parser parser = new Parser(tokens);
+        Expr expression = parser.parse();
+        if (hadError) return;
+
+        System.out.println(new AstPrinter().print(expression));
     }
 
     static void error(int line, String message){
         report(line, "", message);
     }
 
+    static void error(Token token, String message){
+        if (token.type == TokenType.EOF){
+            report(token.line, " at end", message);
+        }
+        else {
+            report(token.line, " at '" + token.lexeme + "'", message);
+        }
+    }
+
     static void report(int line, String where, String message){
         System.err.println("[line " + line + "] Error " + where + ": " + message);
-        handError = true;
+        hadError = true;
     }
 }
