@@ -47,14 +47,19 @@ public class Lox {
 
     private static void run(String source){
 
-        // Scanner: From source code -> list of Tokens
+        // Scanner: From source code -> list of Tokens (Lexical Analysis)
         Scanner scanner = new Scanner(source);
         List<Token> tokens = scanner.scanTokens();
 
-        // Parser: From list of Tokens -> List of Statements (each an Abstract Syntax Tree)
+        // Parser: From list of Tokens -> List of Statements (each an Abstract Syntax Tree) (Syntactic analysis)
         Parser parser = new Parser(tokens);
         List<Stmt> statements = parser.parse();
         if (hadError) return;
+
+        // Resolver: Feeds some information to the interpreter (Semantics analysis)
+        Resolver resolver = new Resolver(interpreter);
+        resolver.resolve(statements);
+        if (hadError) return;;
 
         // Interpreter: From list of Statements -> Evaluation
         interpreter.interpret(statements);
