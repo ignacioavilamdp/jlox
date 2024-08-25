@@ -1,0 +1,6 @@
+fun printX() {
+  print x;
+}
+
+var x = 1;
+printX();
