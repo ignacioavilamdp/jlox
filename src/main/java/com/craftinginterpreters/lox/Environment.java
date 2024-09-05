@@ -48,7 +48,11 @@ public class Environment {
     }
 
     Object getAt(int distance, Token name){
-        return ancestor(distance).values.get(name.lexeme);
+        return getAt(distance, name.lexeme);
+    }
+
+    Object getAt(int distance, String name){
+        return ancestor(distance).values.get(name);
     }
 
     Environment ancestor(int distance){
